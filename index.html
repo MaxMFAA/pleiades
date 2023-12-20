@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Afficher un plan carré avec HDRI EXR - Three.js</title>
+  <style>
+    body { margin: 0; }
+    canvas { width: 100%; height: 100% }
+  </style>
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.rawgit.com/imaya/zlib.js/master/bin/inflate.min.js"></script>
+  <script src="https://cdn.rawgit.com/mrdoob/three.js/dev/examples/js/loaders/EXRLoader.js"></script>
+  <script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement)
+    controls.enableDamping = true
+    controls.dampingFactor = 0.25
+    controls.enableZoom = false
+
+    const exrLoader = new THREE.EXRLoader(); // Crée un chargeur pour les fichiers EXR
+
+    exrLoader.load('https://drive.google.com/file/d/1xuzZXbzeDpD3Yw5t2r8r207VJGA7cBHg/view?usp=sharing', (texture) => {
+      const pmremGenerator = new THREE.PMREMGenerator(renderer);
+      pmremGenerator.compileCubemapShader();
+      const envMap = pmremGenerator.fromEquirectangular(texture).texture;
+
+      scene.background = envMap;
+      scene.environment = envMap;
+    });
+
+    const geometry = new THREE.PlaneGeometry(10, 10, 32, 32); // Dimensions du plan carré
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff }); // Couleur blanche pour le plan carré
+    const squarePlane = new THREE.Mesh(geometry, material);
+    scene.add(squarePlane);
+
+    camera.position.z = 15; // Déplace la caméra vers l'arrière pour voir le plan
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update(); // Mettre à jour les contrôles de l'orbite
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
